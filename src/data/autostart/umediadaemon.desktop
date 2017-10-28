@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=umediadeamon
+GenericName=UMedia Daemon
+Comment=Starts the UMedia Daemon
+Exec=sh -c "umediadaemon"
+Terminal=false
+Type=Application
+X-GNOME-Autostart-enabled=true

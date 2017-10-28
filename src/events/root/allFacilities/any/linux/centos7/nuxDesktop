@@ -1,0 +1,13 @@
+#!/bin/bash
+
+if ! [ -f "/etc/yum.repos.d/nux-dextop.repo" ]; then
+  # adding epel repository
+  yum install -y epel-release
+
+  # adding nux-desktop repository
+  yum install -y http://li.nux.ro/download/nux/dextop/el7/x86_64/nux-dextop-release-0-5.el7.nux.noarch.rpm
+fi
+
+# installing video codecs (https://wiki.centos.org/TipsAndTricks/MultimediaOnCentOS7) used by firefox, nuke...
+yum install -y vlc smplayer ffmpeg
+yum install -y libdvdcss gstreamer{,1}-plugins-ugly gstreamer-plugins-bad-nonfree gstreamer1-plugins-bad-freeworld

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# dev application used to diff files
+yum install -y kdiff3

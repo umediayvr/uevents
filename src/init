@@ -1,0 +1,38 @@
+#!/bin/bash
+
+#
+#          ___..----'---`----..___
+#          ===================================_
+#            `---.._______..---'.        -_ _  _______________
+#                                \ _______ (_||__)____________)
+#                         *----   -_          _______\_____\
+#                                   -________/
+#
+#
+# Umedia Events
+
+dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# avoiding to prepended to the system path for every single bash session by making
+# sure bin is not included to the path yet.
+ueventsBinPath+="$dir/bin"
+if ! [ "$UEVENTS_BIN_PATH" == "$ueventsBinPath" ]; then
+    export UEVENTS_BIN_PATH=$ueventsBinPath
+    export PATH="$UEVENTS_BIN_PATH:$PATH"
+fi
+
+# installing umedia daemon when running as normal user. This is how the
+# login scripts get triggered.
+if [[ $(id -u) -ne 0 ]]; then
+
+  # updating umedia daemon (auto-start script for kde/gnome):
+  if ! [ -d "$HOME/.config/autostart" ]; then
+    mkdir -p ~/.config/autostart
+
+  # removing old autostart file that contains a typo :(
+  elif [ -f "$HOME/.config/autostart/umediadeamon.desktop" ]; then
+    rm "$HOME/.config/autostart/umediadeamon.desktop"
+  fi
+
+  cp $dir/data/autostart/*.desktop ~/.config/autostart/
+fi
