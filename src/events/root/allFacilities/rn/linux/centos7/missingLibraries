@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# ideally the farm should have the same libraries as the workstations. However,
+# the current build contains fewer libraries that can cause issues when trying
+# to run a desktop applications on the farm. This script is a temporary workaround
+# for this issue.
+
+yum install -y giflib LibRaw libwebp
+yum install -y libXrandr libXcursor libGLU libXft libXi libXinerama libSM libXmu gnu-free-sans-fonts

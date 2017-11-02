@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# required dependencies to run maya on centos7
+yum install -y compat-libtiff3
+yum install -y xorg-x11-fonts-ISO8859-1-100dpi xorg-x11-fonts-ISO8859-1-75dpi xorg-x11-fonts-100dpi xorg-x11-fonts-75dpi
+yum install -y mesa-libGLw csh libXp libXp-devel gamin audiofile audiofile-devel e2fsprogs-libs tcsh

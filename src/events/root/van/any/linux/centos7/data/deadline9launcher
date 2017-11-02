@@ -1,0 +1,219 @@
+#!/bin/sh
+#
+# deadline9launcher Handles remote communication for Deadline.
+# chkconfig: 345 80 20
+# description: Handles remote communication between Deadline Client applications.
+
+### BEGIN INIT INFO
+# Provides: deadline9launcher
+# Default-Start: 3 4 5
+# Default-Stop: 0 1 2 6
+# Required-Start: $network $named $remote_fs
+# Required-Stop: $network $named $remote_fs
+# Short-Description: Deadline remote communication.
+# Description: Handles remote communication between Deadline Client applications.
+### END INIT INFO
+
+# Source function library. (Supported only on Red Hat distributions.
+( . /etc/rc.d/init.d/functions 1>/dev/null 2>&1 )
+
+DEADLINEBIN="$( locres apps/deadline/$UVER_DEADLINELAUNCHER_VERSION )/bin/$UCORE_OS/$UCORE_OS_VERSION/bin"
+DEADLINELOG="/tmp/DeadlineLog"
+
+DEADLINEVERSION="$( majorver $UVER_DEADLINELAUNCHER_VERSION )"
+LAUNCHERSERVICEUSERNAME="renders"
+
+LAUNCHERSERVICEFILENAME="deadline${DEADLINEVERSION}launcherservice"
+LAUNCHERSERVICELOCK="/var/lock/subsys/${LAUNCHERSERVICEFILENAME}"
+LOGFILE="/var/log/${LAUNCHERSERVICEFILENAME}.log"
+PIDFILE="/var/run/${LAUNCHERSERVICEFILENAME}.pid"
+LONGNAME="Deadline ${DEADLINEVERSION} Launcher Service"
+
+PID=-1	# What is the process ID? Populated by 'service_is_running'
+
+service_is_running() {
+	# Note that this only checks to see if there's a Launcher running
+	# that was started from this init script.
+	if [ -e "${PIDFILE}" ]; then
+		PID=`cat ${PIDFILE}`
+		ps -p $PID >/dev/null 2>&1
+		if [ $? -eq 0 ]; then
+			return 0
+		else
+			rm -f "${PIDFILE}" >/dev/null 2>&1
+			rm -f "${LAUNCHERSERVICELOCK}" >/dev/null 2>&1
+		fi
+	fi
+
+	PID=-1
+	return 1
+}
+
+log_event() {
+	if [ $# -gt 0 ]; then
+		date "+%F %T: $1" >> "${LOGFILE}"
+
+		if [ $# -gt 1 ] && [ $2 = true ]; then
+			echo $1
+		fi
+	fi
+}
+
+start () {
+
+	if service_is_running; then
+		log_event "The ${LONGNAME} is already running (PID ${PID})." true
+
+		return 0
+	else
+		# Start the Deadline Launcher in headless mode.
+		if [ -e "${DEADLINEBIN}/deadlinelauncher" ]; then
+			if /bin/su ${LAUNCHERSERVICEUSERNAME} -c "[ -x '${DEADLINEBIN}/deadlinelauncher' ]"; then
+
+				# Note 'deadlinelaunche' is NOT a typo -- max proc name is 15 chars on linux.
+				if pgrep 'deadlinelaunche' >/dev/null; then
+					log_event "Found a Deadline Launcher that is not running as a service, trying to replace it..." true
+
+					# There's another launcher running (that is NOT a daemon), try shutting it down
+					"${DEADLINEBIN}/deadlinelauncher" -shutdown >>"${LOGFILE}"
+
+					# If it's still running after that, it's probably a different version, leave it alone...
+				fi
+
+				# Create a new PID file as root, but CHOWN it to the user that we'll be running as
+				touch "${PIDFILE}"
+				chown "${LAUNCHERSERVICEUSERNAME}" "${PIDFILE}"
+				/bin/su - ${LAUNCHERSERVICEUSERNAME} -c "${DEADLINEBIN}/deadlinelauncher -daemon -nogui >& /dev/null & echo \$! >& \"${PIDFILE}\""
+
+				# Add log entries
+				log_event "The ${LONGNAME} has been started." true
+				log_event "Full Launcher log can be found in ${DEADLINELOG}"
+
+				touch "${LAUNCHERSERVICELOCK}" 2>/dev/null
+
+				return 0
+			else
+				log_event "The configured service user '${LAUNCHERSERVICEUSERNAME:-root}' does not have execute permissions for the 'deadlinelauncher' shell script." true
+				return 4
+			fi
+		else
+			log_event "The 'deadlinelauncher' shell script does not exist at expected location '${DEADLINEBIN}'." true
+			return 5
+		fi
+	fi
+}
+
+stop () {
+
+	# Note 'deadlinelaunche' is NOT a typo -- max proc name is 15 chars on linux.
+	if pgrep 'deadlinelaunche' >/dev/null; then
+		log_event "Requesting shutdown of the ${LONGNAME}..." true
+
+		# Try shutting down the Deadline Launcher gracefully first, then kill if necessary.
+		if [ -x "${DEADLINEBIN}/deadlinelauncher" ]; then
+			"${DEADLINEBIN}/deadlinelauncher" -shutdownall >> "${LOGFILE}"
+		fi
+
+		sleep 1
+	elif ! service_is_running; then
+		log_event "The ${LONGNAME} is not currently running." true
+		return 0
+	fi
+
+	if service_is_running; then
+
+		log_event "Failed to shut down the ${LONGNAME} nicely, forcing exit..." true
+		kill -KILL $PID
+
+		if ! service_is_running; then
+			# Alright, it should actually be dead now, clean up files.
+			rm -f "${PIDFILE}"
+			rm -f "${LAUNCHERSERVICELOCK}"
+		else
+			log_event "Failed to stop the ${LONGNAME}." true
+			return 1
+		fi
+	fi
+
+	log_event "The ${LONGNAME} has been stopped." true
+
+	return 0
+}
+
+restart() {
+	stop
+	start
+
+	return $?
+}
+
+rh_status()
+{
+	if [ -e "${PIDFILE}" ]; then
+		PID=`cat ${PIDFILE}`
+
+		if ps -p $PID >/dev/null 2>&1; then
+			log_event "The ${LONGNAME} is running with PID $PID." true
+			return 0
+		else
+			log_event "The ${LONGNAME} exited prematurely." true
+			return 1
+		fi
+	elif [ -e "${LAUNCHERSERVICELOCK}" ]; then
+		log_event "The ${LONGNAME} exited prematurely." true
+		return 2
+	else
+		log_event "The ${LONGNAME} is not currently running." true
+		return 3
+	fi
+}
+
+rh_status_q(){
+	rh_status >/dev/null 2>&1
+
+	return $?
+}
+
+log_event "'$1' invoked..."
+
+EXIT_CODE=1
+# See how we were called.
+case "$1" in
+	start)
+		start
+
+		EXIT_CODE=$?
+		;;
+	stop)
+		stop
+
+		EXIT_CODE=$?
+		;;
+	restart|force-reload)
+		restart
+
+		EXIT_CODE=$?
+		;;
+	status)
+		rh_status
+
+		EXIT_CODE=$?
+		;;
+	condrestart|try-restart)
+		if ! rh_status_q; then
+			log_event "The ${LONGNAME} is not currently running; restart will not be performed." true
+
+			EXIT_CODE=0
+		else
+			restart
+
+			EXIT_CODE=$?
+		fi
+		;;
+	*)
+		log_event "Usage: $0 {start|stop|status|restart|condrestart|try-restart|force-reload}" true
+		EXIT_CODE=3
+esac
+
+log_event "'$1' operation finished with exit code '$EXIT_CODE'."
+exit $EXIT_CODE
