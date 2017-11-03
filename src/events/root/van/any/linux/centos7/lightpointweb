@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ATTENTION PLEASE:
-# the version bellow is used to find the installation zip file and also
+# the version below is used to find the installation zip file and also
 # to check if that version has been already installed under the client. Therefore,
 # make sure to update this version when the installation zip file is updated.
 lightPointWebVersion="5.0.4.1"
