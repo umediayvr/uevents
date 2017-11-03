@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# ATTENTION PLEASE:
+# the version bellow is used to find the installation zip file and also
+# to check if that version has been already installed under the client. Therefore,
+# make sure to update this version when the installation zip file is updated.
+lightPointWebVersion="5.0.4.1"
+
+# FIREWALL ERROR:
+# in case this plugin is not working "giving a firewall error" try to look if
+# the lock file "/tmp/.X1-lock" does not exist. Then if does not exist create it:
+# touch /tmp/.X1-lock
+
+# getting current script folder
+dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# custom file used to tell what is the current lightpointweb installed version
+installedVersionFile="/usr/bin/lightpointweb/.umediaLightPointWebVersion"
+runInstall="true"
+
+# if this script is running with the argument true, it
+# is going to force the installation
+if [ "$1" == "true" ]; then
+  echo "forcing reinstall"
+# checking if the version has been already installed
+elif [ -f "$installedVersionFile" ]; then
+  installedVersion=$(cat "$installedVersionFile")
+  if [ "$lightPointWebVersion" == "$installedVersion" ]; then
+    runInstall="false"
+  fi
+fi
+
+# installing light point web in case it has not been installed yet
+if [ "$runInstall" == "true" ]; then
+  temporaryDirectory=$(mktemp -d)
+  unzip $dir/data/lightpointweb/LightPointWeb_Linux_x64_$lightPointWebVersion.zip -d $temporaryDirectory
+
+  # running the installation
+  cd $temporaryDirectory/LightPointWeb_Linux_x64
+  ./install.sh
+
+  # creating a file to track the installed version
+  echo "$lightPointWebVersion" > $installedVersionFile
+fi
+
+# updating local lightpointweb configuration
+cp -f $dir/data/lightpointweb/settings.cfg /etc/lightpointweb/settings.cfg

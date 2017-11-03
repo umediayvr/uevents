@@ -1,6 +1,0 @@
-#!/bin/bash
-
-# required for light point web plugin used by firefox.
-# It needs epel repository (which gets installed by
-# the any/epel script)
-yum install -y qtwebkit libpng12
