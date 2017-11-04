@@ -45,3 +45,8 @@ fi
 
 # updating local lightpointweb configuration
 cp -f $dir/data/lightpointweb/settings.cfg /etc/lightpointweb/settings.cfg
+
+# TODO: creating a temporary file used by lightpointweb, in case this file is not
+# in place than it may raise an error when trying to connect through lightpointweb
+touch /tmp/.X1-lock
+chmod 777 /tmp/.X1-lock
