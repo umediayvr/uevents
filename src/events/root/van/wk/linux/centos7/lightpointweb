@@ -4,7 +4,7 @@
 # the version below is used to find the installation zip file and also
 # to check if that version has been already installed under the client. Therefore,
 # make sure to update this version when the installation zip file is updated.
-lightPointWebVersion="5.0.4.1"
+lightPointWebVersion="5.0.4.2"
 
 # FIREWALL ERROR:
 # in case this plugin is not working "giving a firewall error" try to look if
@@ -45,8 +45,3 @@ fi
 
 # updating local lightpointweb configuration
 cp -f $dir/data/lightpointweb/settings.cfg /etc/lightpointweb/settings.cfg
-
-# TODO: creating a temporary file used by lightpointweb, in case this file is not
-# in place than it may raise an error when trying to connect through lightpointweb
-touch /tmp/.X1-lock
-chmod 777 /tmp/.X1-lock
