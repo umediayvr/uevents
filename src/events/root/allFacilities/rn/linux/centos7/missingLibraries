@@ -5,5 +5,5 @@
 # to run a desktop applications on the farm. This script is a temporary workaround
 # for this issue.
 
-yum install -y giflib LibRaw libwebp
+yum install -y giflib LibRaw libwebp libpng12 libXcomposite pulseaudio
 yum install -y libXrandr libXcursor libGLU libXft libXi libXinerama libSM libXmu gnu-free-sans-fonts
