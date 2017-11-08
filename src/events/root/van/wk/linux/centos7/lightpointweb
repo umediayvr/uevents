@@ -45,3 +45,9 @@ fi
 
 # updating local lightpointweb configuration
 cp -f $dir/data/lightpointweb/settings.cfg /etc/lightpointweb/settings.cfg
+
+# we don't run legacy firefox, therefore we don't need to provide the legacy
+# plugin
+if [ -d "/usr/bin/lightpointweb/firefox/extension" ]; then
+  rm -rfd /usr/bin/lightpointweb/firefox/extension
+fi
