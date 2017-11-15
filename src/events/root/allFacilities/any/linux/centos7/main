@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# This script file ("main") gets executed first before any other script under
+# the same directory.
+
+# cleaning yum cache
+yum clean all
