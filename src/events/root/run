@@ -29,11 +29,25 @@ for facilityPath in $allFacilities $currentFacility ; do
       continue
     fi
 
-    for executable in $scriptPath/* ; do
-      # making sure it's an executable
-      if [[ -f "$executable" &&  -x "$executable" ]]; then
-        eval $executable
-      fi
+    # we want to execute a "main" script first, then everything else after that
+    for scriptOrder in "main" "any" ; do
+      for executable in $scriptPath/* ; do
+
+        # making sure sure we are executing the main script first
+        executableBaseName=$(basename $executable)
+        if [[ "$executableBaseName" != "main" && "$scriptOrder" == "main" ]]; then
+          continue
+        # also, preventing the execution of the main script again when
+        # everything else is executed
+        elif [[ "$executableBaseName" == "main" && "$scriptOrder" == "any" ]]; then
+          continue
+        fi
+
+        # making sure it's an executable
+        if [[ -f "$executable" &&  -x "$executable" ]]; then
+          eval $executable
+        fi
+      done
     done
   done
 done

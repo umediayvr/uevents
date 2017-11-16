@@ -25,6 +25,12 @@ fi
 # login scripts get triggered.
 if [[ $(id -u) -ne 0 ]]; then
 
+  # making sure uevents is installed, otherwise show an error message
+  isUmediaServiceInstalled=`systemctl is-active umediaEvents`
+  if [[ "$isUmediaServiceInstalled" == "unknown" ]]; then
+    echo "uevents error: This workstation does not have the umedia events installed properly (uroot/<RELEASE_TYPE>/rootInstall), please contact IT!" >&2
+  fi
+
   # updating umedia daemon (auto-start script for kde/gnome):
   if ! [ -d "$HOME/.config/autostart" ]; then
     mkdir -p ~/.config/autostart
