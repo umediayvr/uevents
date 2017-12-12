@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# This script file ("main") gets executed first before any other script under
+# the same directory.
+
+# updating all dependencies (since we maintain the repos locally)
+# excluding kernel and nvidia driver, since they are updated separatelly
+yum update -y --exclude=kernel* --exclude=nvidia-*
