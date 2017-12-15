@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# The kernel version is locked down (same as the graphics card driver).
+# To list the available versions:
+# yum list all | grep kernel
+kernelVersion="3.10.0-693.5.2.el7"
+
+# updating kernel
+yum update -y "kernel-$kernelVersion"
