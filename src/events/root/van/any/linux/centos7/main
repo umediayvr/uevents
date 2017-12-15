@@ -3,6 +3,15 @@
 # This script file ("main") gets executed first before any other script under
 # the same directory.
 
+# getting current script folder
+dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# updating kernel
+source "$dir/data/kernel"
+
+# updating gpu driver
+source "$dir/data/gpudriver"
+
 # updating all dependencies (since we maintain the repos locally)
 # excluding kernel and nvidia driver, since they are updated separatelly
 yum update -y --exclude=kernel* --exclude=nvidia-*
