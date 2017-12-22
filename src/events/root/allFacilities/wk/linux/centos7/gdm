@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# getting current script folder
+dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# configuration db
+cat >/etc/dconf/profile/gdm <<EOL
+user-db:user
+system-db:gdm
+file-db:/usr/share/gdm/greeter-dconf-defaults
+EOL
+
+# release information displayed in gdm login screen
+releaseType=$(systemctl status umediaEvents.service | grep -Po '/runUMediaEvents\W*\K[^ ]*')
+ueventsVersion=$(cat /etc/umediaUEventsVersion)
+
+cat >/etc/dconf/db/gdm.d/10-local-gdm-settings <<EOL
+[org/gnome/login-screen]
+disable-user-list=true
+banner-message-enable=true
+banner-message-text='Release Type: ${releaseType}\nUEvents Version: ${ueventsVersion}'
+logo='${dir}/data/logo.png'
+EOL
+
+# updating configuration
+dconf update
