@@ -18,7 +18,7 @@ cat >/etc/dconf/db/gdm.d/10-local-gdm-settings <<EOL
 [org/gnome/login-screen]
 disable-user-list=true
 banner-message-enable=true
-banner-message-text='Release Type: ${releaseType}\nUEvents Version: ${ueventsVersion}'
+banner-message-text='Release Type: ${releaseType}, UEvents Version: ${ueventsVersion}'
 logo='${dir}/data/logo.png'
 EOL
 
