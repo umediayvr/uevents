@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# getting current script folder
+dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# deadline requires the client configuration under a
+# specific location.
+deadlineConfigLocation="/var/lib/Thinkbox"
+deadlineConfigName="Deadline9"
+if ! [[ -d "$deadlineConfigLocation/$deadlineConfigName" ]]; then
+  mkdir -p "$deadlineConfigLocation"
+  cp -R "$dir/data/$deadlineConfigName" "$deadlineConfigLocation"
+fi
