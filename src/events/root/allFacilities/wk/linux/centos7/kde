@@ -2,3 +2,4 @@
 
 yum install -y kde-workspace
 yum install -y kmix
+yum install -y ksysguard
