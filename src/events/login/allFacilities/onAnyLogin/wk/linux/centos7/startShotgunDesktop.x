@@ -1,3 +1,4 @@
 #!/bin/bash
 
-exec shotgundesktop&
+# initializes shotgundesktop interface during startup
+shotgundesktop&
