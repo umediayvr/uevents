@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# development dependency used to lint bash syntax
+yum install -y ShellCheck
