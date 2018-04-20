@@ -3,11 +3,20 @@
 # getting current script folder
 dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+deadlineBaseName="Deadline9"
+
 # deadline requires the client configuration under a
 # specific location.
 deadlineConfigLocation="/var/lib/Thinkbox"
-deadlineConfigName="Deadline9"
-if ! [[ -d "$deadlineConfigLocation/$deadlineConfigName" ]]; then
+if ! [[ -d "$deadlineConfigLocation/$deadlineBaseName" ]]; then
   mkdir -p "$deadlineConfigLocation"
-  cp -R "$dir/data/$deadlineConfigName" "$deadlineConfigLocation"
+
+  # copying the base deadline configuration to the target location
+  cp -R "$dir/data/$deadlineBaseName" "$deadlineConfigLocation"
+fi
+
+deadlineLogLocation="/var/log/Thinkbox/$deadlineBaseName"
+if ! [[ -d "$deadlineLogLocation" ]]; then
+  mkdir -p "$deadlineLogLocation"
+  chmod 777 "$deadlineLogLocation"
 fi
