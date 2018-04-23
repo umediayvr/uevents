@@ -13,10 +13,20 @@ if ! [[ -d "$deadlineConfigLocation/$deadlineBaseName" ]]; then
 
   # copying the base deadline configuration to the target location
   cp -R "$dir/data/$deadlineBaseName" "$deadlineConfigLocation"
+
+  chmod 777 $deadlineConfigLocation/$deadlineBaseName/*.ini
 fi
 
 deadlineLogLocation="/var/log/Thinkbox/$deadlineBaseName"
 if ! [[ -d "$deadlineLogLocation" ]]; then
   mkdir -p "$deadlineLogLocation"
-  chmod 777 "$deadlineLogLocation"
+
+  chmod 777 "$(dirname $deadlineLogLocation)" "$deadlineLogLocation"
+fi
+
+# removing deprecated configuration about old deadline installation.
+# TODO: this deprecation warning was introduced in 0.15.0, please
+# remove this in future releases
+if [[ -d "/var/log/ThinkBox" ]]; then
+  rm -rf "/var/log/ThinkBox"
 fi
