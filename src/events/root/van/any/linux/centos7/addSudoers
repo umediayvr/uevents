@@ -1,0 +1,51 @@
+#!/bin/bash
+# Configure Umedia sudo groups and users.
+# Where possible we DO NOT modify the default /etc/sudoers file.
+# As long as we have an #includedir directive at the end of /etc/sudoers, the contents of the include
+# files should take precedence over the /etc/sudoers file, since they should be read last.
+# Group and user rules should be configured at the end of this script following this convention.
+
+# check if there is no includedir directive and add it if necessary
+if ! grep -qe 'includedir' /etc/sudoers; then
+    cat <<EOT >> /etc/sudoers
+## Read drop-in files from /etc/sudoers.d (the # here does not mean a comment)
+#includedir /etc/sudoers.d
+EOT
+
+# otherwise confirm if the existing includedir is set correctly and at the last line
+# remove blank lines before checking last line of the file
+elif ! $(grep . /etc/sudoers | tail -n 1 | grep -qe '^#includedir /etc/sudoers.d'); then
+    echo "An includedir directive is set incorrectly in /etc/sudoers."
+    echo "Please remove the existing directive and reboot."
+    exit 1
+fi
+
+## TODO: ignore other valid includedir directives, and only check that our directive is at the end of the file.
+
+# make the /etc/sudoers.d folder if it doesn't exist
+[ -d /etc/sudoers.d ] || (mkdir /etc/sudoers.d && chmod 750 /etc/sudoers.d) || exit 1
+
+# delete existing include files in /etc/sudoers.d
+rm -rf /etc/sudoers.d/* || exit 1
+
+#################################
+#   ADD CUSTOM DIRECTIVES HERE  #
+#################################
+
+# IT Admins
+cat <<EOT > /etc/sudoers.d/admins && chmod 440 /etc/sudoers.d/admins
+## UMEDIA: Allow Admin access for Engineering.
+%admins ALL=(ALL)       ALL
+EOT
+
+## Renderfarm service
+cat <<EOT > /etc/sudoers.d/deadline && chmod 440 /etc/sudoers.d/deadline
+## UMEDIA: renderfarm service.
+renders  ALL=(ALL)NOPASSWD: ALL
+EOT
+
+## UMEDIA: Allow RND access
+cat <<EOT > /etc/sudoers.d/rnd && chmod 440 /etc/sudoers.d/rnd
+## Umedia: Allow Pipeline Developers Sudo access.
+%developers ALL=(ALL)   ALL
+EOT
