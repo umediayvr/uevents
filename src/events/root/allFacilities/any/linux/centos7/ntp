@@ -1,6 +1,0 @@
-#!/bin/bash
-
-# syncing time (UMEDIA_NTP_SERVER is defined by ufacility)
-if ! [ -z "$UMEDIA_NTP_SERVER" ]; then
-  ntpdate -s $UMEDIA_NTP_SERVER
-fi

@@ -1,6 +1,0 @@
-#!/bin/bash
-
-# adding epel repository
-if ! [ -f "/etc/yum.repos.d/epel.repo" ]; then
-  yum install -y epel-release
-fi

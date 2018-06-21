@@ -1,0 +1,120 @@
+#!/bin/bash
+
+usage="$(basename "$0") [-h] -- installs support for uevents.
+
+where:
+    -h/--help           show this help text
+    -r/--release-type   release type you want to install the event: alpha beta stable. Same information defined by the UBASH_VERSION env (default: stable)
+    -c/--core-config    location where the core config is localized under upipe, same information defined by the UPIPE_CORE_CONFIG env
+    -u/--upipe-root     root location for upipe, same information defined by the UPIPE_ROOT env
+    -d/--upipe-dev-root dev root location for upipe, same information defined by the UPIPE_DEV_ROOT env (optional)"
+
+releaseType="stable"
+coreConfig=""
+upipeRoot=""
+upipeDevRoot=""
+while [[ $# -gt 0 ]]
+do
+  key="$1"
+
+  case $key in
+      -h|--help)
+      echo "$usage"
+      exit 1
+      ;;
+      -r|--release-type)
+      releaseType="$2"
+      shift
+      ;;
+      -c|--core-config)
+      coreConfig="$2"
+      shift
+      ;;
+      -u|--upipe-root)
+      upipeRoot="$2"
+      shift
+      ;;
+      -d|--upipe-dev-root)
+      upipeDevRoot="$2"
+      shift
+      ;;
+      *)
+          # unknown option
+      ;;
+  esac
+  shift
+done
+
+# checking if user is root
+if [[ $EUID -ne 0 ]]; then
+   echo "The installation requires root (sudo ./installEventsSupport)!" >&2
+   exit 1
+fi
+
+# validating arguments
+releaseType="${releaseType,,}"
+useReleaseType=""
+if [[ "$releaseType" == "alpha" || "$releaseType" == "stable" || "$releaseType" == "beta" ]]; then
+  useReleaseType="$releaseType"
+fi
+
+if [[ -z "$useReleaseType" ]]; then
+  echo "Invalid release type: $releaseType" >&2
+  exit 1
+fi
+
+if [[ -z "$upipeRoot" ]]; then
+  echo "-u/--upipe-root cannot be empty!" >&2
+  exit 1
+fi
+
+if [[ -z "$coreConfig" ]]; then
+  echo "-c/--core-config cannot be empty!" >&2
+  exit 1
+fi
+
+# installing upipe events service
+echo "Installing service: /etc/systemd/system/upipe-system.service"
+cat <<EOT > /etc/systemd/system/upipe-system.service
+[Unit]
+Description=upipe system events
+Before=display-manager.service
+Wants=autofs.service
+After=autofs.service
+
+[Service]
+Environment="UPIPE_SYSTEM_SERVICE=1"
+Type=oneshot
+User=root
+ExecStart=$upipeRoot/core/uevents/$useReleaseType/events/aux/execSystemEvent system-begin --release-type "$useReleaseType" --core-config "$coreConfig" --upipe-root "$upipeRoot" --upipe-dev-root "$upipeDevRoot"
+ExecStop=$upipeRoot/core/uevents/$useReleaseType/events/aux/execSystemEvent system-end --release-type "$useReleaseType" --core-config "$coreConfig" --upipe-root "$upipeRoot" --upipe-dev-root "$upipeDevRoot"
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOT
+
+# updating systemd
+systemctl disable upipe-system.service
+systemctl --system daemon-reload
+
+# making enabled during startup
+systemctl enable upipe-system.service
+
+# copying a ".desktop" file which is used in KDE/gnome
+# to initialize a program during the start of a desktop
+# session. We use it to start upipe through
+# "upipe.desktop" where this autostart file triggers
+# upipe initialization by running a bash session that
+# is going to load ~/.bashrc. Therefore, by running it
+# the ubash initialization is going to trigger uevents
+# initialization. Resulting the start of "upipe-desktop"
+# service.
+dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+autostartDirectory="/etc/xdg/autostart"
+if ! [[ -d "$autostartDirectory" ]]; then
+  mkdir -p $autostartDirectory
+fi
+cp $dir/events/aux/autostart/upipe.desktop $autostartDirectory/
+
+echo "DONE"

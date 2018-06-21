@@ -1,9 +1,0 @@
-#!/bin/bash
-
-# getting current script folder
-dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-# The su file is managed by uevents. It tells which users can "su" to another
-# user without asking for a password, reference:
-# https://unix.stackexchange.com/questions/113754/allow-user1-to-su-user2-without-password?answertab=votes#tab-top
-cat "$dir/data/su" > /etc/pam.d/su

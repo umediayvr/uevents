@@ -1,4 +1,0 @@
-#!/bin/bash
-
-# required to run atom on centos
-yum install -y xscreensaver --enablerepo=extras

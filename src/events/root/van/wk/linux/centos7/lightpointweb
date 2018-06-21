@@ -1,8 +1,0 @@
-#!/bin/bash
-
-# lightpointweb is no longer in use, removing it.
-# TODO: This file should be removed in future releases
-# (deprecation added in 0.4.1)
-if [ -d "/usr/bin/lightpointweb" ]; then
-  rm -rfd /usr/bin/lightpointweb
-fi
