@@ -9,36 +9,50 @@
 #                                   -________/
 #
 #
-# Umedia Events
+# initialize upipe events
 
 dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # avoiding to prepended to the system path for every single bash session by making
 # sure bin is not included to the path yet.
-ueventsBinPath+="$dir/bin"
-if ! [ "$UEVENTS_BIN_PATH" == "$ueventsBinPath" ]; then
+ueventsBinPath="$dir/bin"
+if ! [[ "$UEVENTS_BIN_PATH" == "$ueventsBinPath" ]]; then
     export UEVENTS_BIN_PATH=$ueventsBinPath
     export PATH="$UEVENTS_BIN_PATH:$PATH"
 fi
 
-# installing umedia daemon when running as normal user. This is how the
-# login scripts get triggered.
-if [[ $(id -u) -ne 0 ]]; then
+# checking if it's running in a graphical session through a normal user
+if xhost >& /dev/null && [[ $(id -u) -ne 0 ]]; then
 
-  # making sure uevents is installed, otherwise show an error message
-  isUmediaServiceInstalled=`systemctl is-active umediaEvents`
-  if [[ "$isUmediaServiceInstalled" == "unknown" ]]; then
-    echo "uevents error: This workstation does not have the umedia events installed properly (uroot/<RELEASE_TYPE>/rootInstall), please contact IT!" >&2
+  # starting the desktop service only when it has not been started yet.
+  # This service is triggered by a "upipe.desktop" which is
+  # executed during the KDE/gnome initialization. The "upipe.desktop"
+  # is created as part of ./installEventsSupport execution.
+  if [[ $(systemctl --user is-active upipe-desktop) == "inactive" && -z "$UPIPE_DESKTOP_SERVICE" ]]; then
+
+    systemdUserDir="$HOME/.config/systemd/user"
+    upipeDesktopService="$systemdUserDir/upipe-desktop.service"
+
+    # making sure the systemd directory for the user services exist
+    if ! [[ -d "$systemdUserDir" ]]; then
+      mkdir -p "$systemdUserDir"
+    fi
+
+    # creating upipe-desktop service
+    cat <<EOT > $upipeDesktopService
+[Unit]
+Description=upipe desktop events
+
+[Service]
+Environment="UPIPE_DESKTOP_SERVICE=1"
+Type=oneshot
+ExecStart=$dir/bin/urunevent desktop-begin
+ExecStop=$dir/bin/urunevent desktop-end
+RemainAfterExit=yes
+EOT
+
+    # starting upipe-desktop service
+    systemctl --user import-environment
+    systemctl --user start upipe-desktop
   fi
-
-  # updating umedia daemon (auto-start script for kde/gnome):
-  if ! [ -d "$HOME/.config/autostart" ]; then
-    mkdir -p ~/.config/autostart
-
-  # removing old autostart file that contains a typo :(
-  elif [ -f "$HOME/.config/autostart/umediadeamon.desktop" ]; then
-    rm "$HOME/.config/autostart/umediadeamon.desktop"
-  fi
-
-  cp $dir/data/autostart/*.desktop ~/.config/autostart/
 fi
