@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# This script is triggered by the service "upipe-system"
+# which is installed through "systemInstall". It runs the
+# event by creating a temporary upipe environment
+
+event="$1"
+releaseType=""
+coreConfig=""
+upipeRoot=""
+upipeDevRoot=""
+while [[ $# -gt 0 ]]
+do
+  key="$1"
+
+  case $key in
+      -r|--release-type)
+      releaseType="$2"
+      shift
+      ;;
+      -c|--core-config)
+      coreConfig="$2"
+      shift
+      ;;
+      -u|--upipe-root)
+      upipeRoot="$2"
+      shift
+      ;;
+      -d|--upipe-dev-root)
+      upipeDevRoot="$2"
+      shift
+      ;;
+      *)
+          # unknown option
+      ;;
+  esac
+  shift
+done
+
+if [[ -z "$event" ]]; then
+  echo "error: event name has not been passed as first argument" >&2
+  exit 1
+elif [[ -z "$upipeRoot" ]]; then
+  echo "error: -u/--upipe-root cannot be empty" >&2
+  exit 1
+elif [[ -z "$coreConfig" ]]; then
+  echo "error: -c/--core-config cannot be empty" >&2
+  exit 1
+elif [[ -z "$releaseType" ]]; then
+  echo "error: -r/--release-type cannot be empty" >&2
+  exit 1
+fi
+
+# creating upipe environment
+export UPIPE_ROOT=$upipeRoot
+export UPIPE_DEV_ROOT=$upipeDevRoot
+export UPIPE_CORE_CONFIG=$coreConfig
+export UBASH_VERSION=$releaseType
+source $UPIPE_ROOT/core/ubash/$UBASH_VERSION/env
+source $UPIPE_ROOT/core/ubash/$UBASH_VERSION/init
+
+# running event
+urunevent $event
